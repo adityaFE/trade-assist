@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/App';
 import { 
@@ -30,13 +30,27 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import NotificationPanel from './NotificationPanel';
 import SearchBar from './SearchBar';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogHeader,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { LoadingSpinner } from './LoadingSpinner';
+import { useToast } from '@/hooks/use-toast';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   
   const navLinks = [
     { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4 mr-2" /> },
@@ -44,6 +58,32 @@ const Navbar: React.FC = () => {
     { path: '/news', label: 'News', icon: <Newspaper className="w-4 h-4 mr-2" /> },
     { path: '/paper-trading', label: 'Paper Trading', icon: <BarChart2 className="w-4 h-4 mr-2" /> },
   ];
+
+  const handleLogoutClick = () =>{
+    setShowLogoutConfirm(true);
+  }
+
+  const handleLogoutConfirm= () =>{
+    setShowLogoutConfirm(false);
+    setLoggingOut(true);
+    logout()
+    .then(() => {
+      toast({
+        title: 'Logout successful',
+        description: 'You have been logged out successfully.',
+      });
+      navigate('/login');
+    })
+    .catch((error) => {
+      toast({
+        title: 'Logout failed',
+        description: 'An error occurred while logging out.',
+      });
+    })
+    .finally(() => {
+      setLoggingOut(false);
+    });
+  }
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
@@ -62,6 +102,31 @@ const Navbar: React.FC = () => {
   
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to log out? You will need to sign in again to access your profile.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleLogoutConfirm}
+              disabled={loggingOut}
+            >
+              {loggingOut ? <LoadingSpinner /> : 'Logout'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -161,7 +226,8 @@ const Navbar: React.FC = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       className="text-destructive focus:text-destructive cursor-pointer"
-                      onClick={logout}
+                      onClick={handleLogoutClick}
+                      disabled={loggingOut}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
