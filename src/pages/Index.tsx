@@ -78,7 +78,7 @@ const Index: React.FC = () => {
                       </div>
                       <div className="mt-4 h-[300px] w-full bg-card">
                         <img 
-                          src="https://images.unsplash.com/photo-1642790551116-18e150f248e5?w=800&auto=format&fit=crop&q=80" 
+                          src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                           alt="Stock chart" 
                           className="w-full h-full object-cover rounded-md"
                         />
